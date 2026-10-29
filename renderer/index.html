@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'self' 'unsafe-inline'; script-src 'self'; img-src 'self' data:">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Paradox Backup</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div class="drag"></div>
+<div class="sky"></div><canvas id="stars"></canvas><div id="glow"></div><div id="bar"></div>
+<div class="app">
+  <aside>
+    <div class="logo">
+      <svg class="sigil" viewBox="0 0 100 100" fill="none" aria-label="Paradox Backup">
+        <defs>
+          <linearGradient id="gCloud" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#7cc4ff"/><stop offset="1" stop-color="#3b5bdb"/></linearGradient>
+          <linearGradient id="gDisk" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#14285a"/><stop offset="1" stop-color="#081330"/></linearGradient>
+        </defs>
+        <rect x="10" y="40" width="76" height="46" rx="8" fill="url(#gDisk)" stroke="#4cc9f0" stroke-width="2.4"/>
+        <circle cx="34" cy="63" r="15" stroke="#5b7cff" stroke-width="2"/>
+        <circle cx="34" cy="63" r="6" stroke="#4cc9f0" stroke-width="1.6"/>
+        <circle cx="34" cy="63" r="1.8" fill="#b8ecff"/>
+        <path d="M52 52L70 62" stroke="#4cc9f0" stroke-width="2.4" stroke-linecap="round"/>
+        <circle cx="70" cy="62" r="2.4" fill="#4cc9f0"/>
+        <circle class="led" cx="78" cy="78" r="2.8" fill="#4ade80"/>
+        <g class="lens">
+          <circle cx="54" cy="66" r="14" fill="#1a3a7a" stroke="#b8ecff" stroke-width="3.4"/>
+          <path d="M45 60A10 10 0 0 1 52 56" stroke="#fff" stroke-opacity=".7" stroke-width="2" stroke-linecap="round"/>
+          <path d="M64 76L80 92" stroke="#b8ecff" stroke-width="5.4" stroke-linecap="round"/>
+        </g>
+        <g class="cloud">
+          <g fill="#9db4ff" stroke="#9db4ff" stroke-width="3.2" stroke-linejoin="round">
+            <circle cx="46" cy="46" r="10"/><circle cx="58" cy="38" r="13"/><circle cx="74" cy="45" r="10"/><rect x="46" y="44" width="28" height="12" rx="5"/>
+          </g>
+          <g fill="url(#gCloud)">
+            <circle cx="46" cy="46" r="10"/><circle cx="58" cy="38" r="13"/><circle cx="74" cy="45" r="10"/><rect x="46" y="44" width="28" height="12" rx="5"/>
+          </g>
+        </g>
+      </svg>
+      <h1>PARADOX</h1><small>BACKUP</small>
+    </div>
+    <nav>
+      <button data-p="dash" class="active"><span class="ic">◈</span>Dashboard</button>
+      <button data-p="src"><span class="ic">⛁</span>เครื่อง / โฟลเดอร์</button>
+      <button data-p="disk"><span class="ic">◉</span>พื้นที่ดิสก์<span class="badge" id="badge" hidden>0</span></button>
+    </nav>
+    <div class="side-foot"><span class="dot" id="dot"></span><span id="status">กำลังโหลด...</span><br>ปิดหน้าต่างแล้วยังเฝ้าระวังที่ถาดระบบ</div>
+  </aside>
+  <main>
+    <section class="page active" id="p-dash">
+      <div class="head">
+        <div class="titles"><h2>Dashboard</h2><div class="dateline" id="dateline">—</div></div>
+        <button class="btn primary" id="scan">⟳ สแกนใหม่</button>
+      </div>
+
+      <div class="daybar">
+        <button class="btn nav" id="prev" title="วันก่อนหน้า (←)">‹</button>
+        <div class="strip" id="strip"></div>
+        <button class="btn nav" id="next" title="วันถัดไป (→)">›</button>
+        <div class="dayside">
+          <button class="btn" id="today">วันนี้</button>
+          <label class="pick" title="เลือกวันอื่น"><span>📅</span><input type="date" id="pick"></label>
+        </div>
+      </div>
+      <div class="legend"><span><b class="ok"></b>ครบทุกเครื่อง</span><span><b class="warn"></b>บางเครื่อง</span><span><b class="bad"></b>ไม่พบ</span><span><b class="wait"></b>ยังไม่ถึงเวลา</span><span><i class="less"></i>น้อยกว่าวันก่อน</span><span><i class="more"></i>มากกว่าวันก่อน</span><span class="keys">จุดซ้าย = รอบเที่ยง · จุดขวา = รอบค่ำ · ใช้ปุ่ม ← → เปลี่ยนวันได้</span></div>
+
+      <div class="alert" id="alert" hidden><div class="ico">⚠</div><div id="alertTxt"></div></div>
+      <div class="cards" id="cards"></div>
+      <div class="panel"><table><thead><tr><th>เครื่อง</th><th>Path</th><th class="n">เที่ยง (ไฟล์)</th><th class="n">เที่ยง (GB)</th><th class="n">ค่ำ (ไฟล์)</th><th class="n">ค่ำ (GB)</th><th>สถานะ</th></tr></thead><tbody id="rows"></tbody></table><div id="rowsEmpty"></div></div>
+    </section>
+
+    <section class="page" id="p-src">
+      <div class="head"><div class="titles"><h2>เครื่อง / โฟลเดอร์ที่ต้องเช็ค</h2></div></div>
+      <div class="panel" style="margin-bottom:18px">
+        <div class="form">
+          <label class="field">ชื่อเครื่อง<input id="fm" placeholder="Server Name" style="width:190px"></label>
+          <label class="field">Path / Address<input id="fp" placeholder="D:\Backup" style="width:360px"></label>
+          <button class="btn" id="browse">เลือกโฟลเดอร์...</button>
+          <button class="btn primary" id="add">＋ เพิ่ม</button>
+        </div>
+        <div class="hint">รองรับไดร์ในเครื่อง <code>D:\BackUp</code> หรือโฟลเดอร์ที่แชร์ไว้ <code>\\192.168.x.x\Backup</code></div>
+      </div>
+      <div class="panel" style="margin-bottom:18px"><table><thead><tr><th>เครื่อง</th><th>Path</th><th style="width:90px"></th></tr></thead><tbody id="srcRows"></tbody></table><div id="srcEmpty"></div></div>
+      <div class="panel">
+        <h3>ตั้งค่า</h3>
+        <div class="form">
+          <label class="field">เที่ยง เริ่ม<input id="ns" style="width:80px"></label>
+          <label class="field">ถึง<input id="ne" style="width:80px"></label>
+          <label class="field">ค่ำ เริ่ม<input id="es" style="width:80px"></label>
+          <label class="field">ถึง<input id="ee" style="width:80px"></label>
+          <label class="field">ตรวจทุก (นาที)<input id="rf" style="width:110px"></label>
+          <label class="field">เตือนเมื่อว่างต่ำกว่า (GB)<input id="wf" style="width:150px"></label>
+          <label class="field">หรือใช้เกิน (%)<input id="wp" style="width:110px"></label>
+        </div>
+        <div class="form" style="padding-top:0">
+          <label class="check"><input type="checkbox" id="auto"> เปิดโปรแกรมอัตโนมัติเมื่อเปิดเครื่อง (ทำงานเบื้องหลัง)</label>
+          <button class="btn" id="testNote">ทดสอบแจ้งเตือน</button>
+          <button class="btn primary" id="save">บันทึก</button>
+        </div>
+      </div>
+    </section>
+
+    <section class="page" id="p-disk">
+      <div class="head"><div class="titles"><h2>พื้นที่ดิสก์ปลายทาง backup</h2></div></div>
+      <div id="disks"></div>
+    </section>
+  </main>
+</div>
+<div id="toast"></div>
+<script src="app.js"></script>
+</body>
+</html>

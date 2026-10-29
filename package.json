@@ -1,0 +1,53 @@
+{
+  "name": "paradox-backup",
+  "productName": "Paradox Backup",
+  "version": "1.1.0",
+  "description": "Paradox Backup - ตรวจไฟล์ backup รอบเที่ยง/รอบค่ำ และแจ้งเตือนเมื่อดิสก์ใกล้เต็ม",
+  "main": "main.js",
+  "author": "Paradox Backup",
+  "license": "MIT",
+  "scripts": {
+    "start": "electron .",
+    "dist": "electron-builder --win --x64"
+  },
+  "devDependencies": {
+    "electron": "33.4.11",
+    "electron-builder": "25.1.8",
+    "resedit": "^1.7.2"
+  },
+  "build": {
+    "appId": "com.paradox.backup",
+    "productName": "Paradox Backup",
+    "asar": true,
+    "compression": "maximum",
+    "electronLanguages": ["en-US", "th"],
+    "afterPack": "scripts/after-pack.js",
+    "directories": { "output": "dist" },
+    "files": [
+      "main.js",
+      "preload.js",
+      "scan-core.js",
+      "renderer/**/*",
+      "assets/**/*",
+      "package.json"
+    ],
+    "win": {
+      "target": [{ "target": "nsis", "arch": ["x64"] }],
+      "icon": "assets/icon.ico",
+      "signAndEditExecutable": false
+    },
+    "nsis": {
+      "oneClick": false,
+      "perMachine": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "Paradox Backup",
+      "installerIcon": "assets/icon.ico",
+      "uninstallerIcon": "assets/icon.ico",
+      "installerHeaderIcon": "assets/icon.ico",
+      "runAfterFinish": true,
+      "artifactName": "ParadoxBackup-Setup-${version}.${ext}"
+    }
+  }
+}
